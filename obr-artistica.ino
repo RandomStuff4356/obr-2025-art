@@ -8,8 +8,8 @@
 //PARA COR DO LED RGB, USAR analogWrite AO INVÉS DE digitalWrite
 
 int leitura=0;
-String status = "stable";
-
+String status = "panic";
+  
 Servo servo;
 
 
@@ -34,7 +34,7 @@ void loop()
   {
     lighthouseStable();
   }
-  if(status == "panic")
+  else if(status == "panic")
   {
   	lighthousePanic();
   }
@@ -42,7 +42,7 @@ void loop()
    if(leitura == 1 && status == "stable")
    {
       servo.write(0);//Libera o meteoro
-      status = "pre-impact";
+      status = "panic";
    }
 }
 
