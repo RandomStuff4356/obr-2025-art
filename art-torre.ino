@@ -1,5 +1,5 @@
 #include <Servo.h> 
-#define sensorLumen 8
+#define sensorLumen A0
 
 #define r 6 
 #define g 5
@@ -8,10 +8,11 @@
 //PARA COR DO LED RGB, USAR analogWrite AO INVÉS DE digitalWrite
 
 int leitura=0;
+bool isChecking = true;
+
 String status = "stable";
   
 Servo servo;
-
 
 void setup() 
 {
@@ -27,15 +28,17 @@ void setup()
 
 void loop() 
 {
-  // Serial.println(leitura);
-  leitura = !digitalRead(sensorLumen);
-  Serial.println(leitura);
-  if(status=="stable") 
+  if(analogRead(sensorLumen) > 250){ leitura = 1;}
+  else{ leitura = 0;}
+  Serial.println(analogRead(sensorLumen));
+  if(status=="stable" && isChecking) 
   {
+    isChecking = false;
     lighthouseStable();
   }
-  else if(status == "panic")
+  else if(status == "panic" && isChecking)
   {
+    isChecking = false;
   	lighthousePanic();
   }
 
@@ -43,6 +46,7 @@ void loop()
  {
     servo.write(0);//Libera o meteoro
     status = "panic";
+    isChecking = true;
  }
 }
 
@@ -61,6 +65,7 @@ void lighthouseStable() {
     analogWrite(b, i);
     //Serial.println(i);
   }
+  isChecking = true;
 }
 
 void lighthousePanic() 
@@ -70,13 +75,20 @@ void lighthousePanic()
 
   for(int i=255; i <=53; i++) //Gradualmente deixa o vermelho mais claro 
   { 
-    analogWrite(r, i); 
+    analogWrite(r, i);
+    delay(500);
+    analogWrite(r, LOW);
+    delay(500);    
     //Serial.println(i); 
   }
     
   for(int i=53; i>=255; i--) //Gradualmente deixa o vermelho mais escuro
   {
     analogWrite(r, i);
+    delay(500);
+    analogWrite(r, LOW);
+    delay(500);
     //Serial.println(i);
   }
+  isChecking = true;
 }
