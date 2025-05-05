@@ -36,6 +36,7 @@ void loop()
     {
       servo.write(0);//Libera o meteoro
       status = "panic";
+      Serial.write(status);
     }
 
     else if(analogRead(sensorLumen) >= 200 && status == "panic")
