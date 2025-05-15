@@ -7,8 +7,7 @@
 //IMPORTANTE:
 //PARA COR DO LED RGB, USAR analogWrite AO INVÉS DE digitalWrite
 
-int leitura=0;
-bool isChecking = true;
+bool isChecking = false;
 
 String status = "stable";
   
@@ -22,23 +21,23 @@ void setup()
   pinMode(r, OUTPUT);
   pinMode(g, OUTPUT);
   pinMode(b, OUTPUT);
+  pinMode(sensorLumen, INPUT);
 
   Serial.begin(9600);
 }//Fim do setup
 
 void loop() 
 {
-  leitura = analogRead(sensorLumen); //Leitura do sensor de luz
-
   if(!isChecking)//Se a variável isChecking for falsa
   {  
     if(analogRead(sensorLumen) <= 200 && status == "stable")
     {
-      servo.write(0);//Libera o meteoro
+      delay(5000);
       status = "panic";
+      delay(5000);
     }
 
-    else if(analogRead(sensorLumen) >= 200 && status == "panic")
+    else if(analogRead(sensorLumen) <= 200 && status == "panic")
     {
       status = "impact";
     }
@@ -59,6 +58,7 @@ void loop()
     {
       isChecking = false;
   	  lighthousePanic();
+      servo.write(0);//Libera o meteoro
     }
 
     else if(status == "impact")
@@ -81,9 +81,8 @@ void lighthouseStable()
     analogWrite(g, i); 
     Serial.println(i);
     Serial.println(analogRead(sensorLumen));
-    Serial.println(leitura);
     Serial.println(status);
-    delay(400);//Desacelera a gradiente
+    Serial.println(isChecking);
   }//Fim do for
   
   for(int i=200; i>=100; i--) //Gradualmente deixa o amarelo mais escuro
@@ -92,12 +91,10 @@ void lighthouseStable()
     analogWrite(g, i);
     Serial.println(i);
     Serial.println(analogRead(sensorLumen));
-    Serial.println(leitura);
     Serial.println(status);
-    delay(400);//Desacelera a gradiente
   }//Fim do for
 
-  isChecking = true;
+  isChecking = false;
 }//Fim da função
 
 void lighthousePanic() 
@@ -109,23 +106,35 @@ void lighthousePanic()
   { 
     analogWrite(r, i);
     Serial.println(i); 
-    delay(400);//Desacelera a gradiente
   }//Fim do for
     
   for(int i=53; i>=255; i--) //Gradualmente deixa o vermelho mais escuro
   {
     analogWrite(r, i);
     Serial.println(i);
-    delay(400);//Desacelera a gradiente
   }//Fim do for
 
-  isChecking = true;
+  isChecking = false;
 }//Fim da função
 
 void lighthouseImpact()
 {
   for(int i = 8; i != 0; i--)
   {
+    if(random(0, 5) == 1)
+    {
+      for(int i = 4; i != 0; i--)
+      {
+      analogWrite(r, 255);
+      analogWrite(g, 255);
+      analogWrite(b, 255);
+      delay(80);
+      analogWrite(r, 0);
+      analogWrite(g, 0);
+      analogWrite(b, 0);
+      delay(80);
+      }
+    }
     analogWrite(r, 255);
     analogWrite(g, 255);
     analogWrite(b, 255);
