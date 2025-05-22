@@ -8,3 +8,6 @@ Código do arduino da montanha
 
 teste-servo:
 Teste de servo motor, vira o motor se o LDR detectar ou não luz
+
+resgate.ino:
+Código da modalidade de resgate
