@@ -3,11 +3,13 @@
 
 #define r 6 
 #define g 5
-#define b 3 
+#define b 3
 //IMPORTANTE:
 //PARA COR DO LED RGB, USAR analogWrite AO INVÉS DE digitalWrite
 
 bool isChecking = false;
+
+int valorDeCorte = 200;
 
 String status = "stable";
   
@@ -25,13 +27,13 @@ void loop()
 {
   if(!isChecking)//Se a variável isChecking for falsa
   {  
-    if(analogRead(sensorLumen) <= 200 && status == "stable")
+    if(analogRead(sensorLumen) <= valorDeCorte && status == "stable")
     {
       delay(5000);
       status = "panic";
     }
 
-    else if(analogRead(sensorLumen) <= 200 && status == "panic")
+    else if(analogRead(sensorLumen) <= valorDeCorte && status == "panic")
     {
       status = "impact";
     }
