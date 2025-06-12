@@ -11,13 +11,8 @@ bool isChecking = false;
 
 String status = "stable";
   
-Servo servo;
-
 void setup() 
 {
-  servo.attach(9);
-  servo.write(90); //Coloca o servo na posição inicial
-
   pinMode(r, OUTPUT);
   pinMode(g, OUTPUT);
   pinMode(b, OUTPUT);
@@ -34,7 +29,6 @@ void loop()
     {
       delay(5000);
       status = "panic";
-      delay(5000);
     }
 
     else if(analogRead(sensorLumen) <= 200 && status == "panic")
@@ -47,23 +41,20 @@ void loop()
 
   else  //Se isChecking for verdadeira
   {
+    isChecking = false;
     //Serial.println(analogRead(sensorLumen));
     if(status=="stable") 
     {
-      isChecking = false;
       lighthouseStable();
     }
 
     else if(status == "panic")
     {
-      isChecking = false;
   	  lighthousePanic();
-      servo.write(0);//Libera o meteoro
     }
 
     else if(status == "impact")
     {
-      isChecking = false;
       lighthouseImpact();
     }
 
@@ -83,6 +74,7 @@ void lighthouseStable()
     Serial.println(analogRead(sensorLumen));
     Serial.println(status);
     Serial.println(isChecking);
+  isChecking = false;
   }//Fim do for
   
   for(int i=200; i>=100; i--) //Gradualmente deixa o amarelo mais escuro
@@ -92,9 +84,9 @@ void lighthouseStable()
     Serial.println(i);
     Serial.println(analogRead(sensorLumen));
     Serial.println(status);
+  isChecking = false;
   }//Fim do for
 
-  isChecking = false;
 }//Fim da função
 
 void lighthousePanic() 
@@ -106,15 +98,16 @@ void lighthousePanic()
   { 
     analogWrite(r, i);
     Serial.println(i); 
+  isChecking = false;
   }//Fim do for
     
   for(int i=53; i>=255; i--) //Gradualmente deixa o vermelho mais escuro
   {
     analogWrite(r, i);
     Serial.println(i);
+  isChecking = false;
   }//Fim do for
 
-  isChecking = false;
 }//Fim da função
 
 void lighthouseImpact()
