@@ -129,10 +129,28 @@ void lighthouseImpact()
       analogWrite(b, 0);
       delay(80);
       }
+    }    
+    if(random(0,5) == 2)
+    {
+      for(int i = 0; i != 4; i++)
+      {
+        analogWrite(r, 255);
+        analogWrite(g, 255);
+        analogWrite(b, 255);
+
+        //LED branco
+        delay(50);//Delay aleatório de 0,1s a 1s
+        analogWrite(r, 0);
+        analogWrite(g, 0);
+        analogWrite(b, 0);
+        //LED desligado
+        delay(50);//Delay aleatório de 0,1s a 1s
+      }
     }
     analogWrite(r, 255);
     analogWrite(g, 255);
     analogWrite(b, 255);
+
     //LED branco
     delay(random(100, 1000));//Delay aleatório de 0,1s a 1s
     analogWrite(r, 0);
