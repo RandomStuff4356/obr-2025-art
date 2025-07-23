@@ -1,5 +1,8 @@
+#include <Ultrasonic.h>
 #include <Servo.h> 
-#define sensorLumen A0
+Ultrasonic ultra(13, 12);
+
+int distancia;
 
 #define r 6 
 #define g 5
@@ -9,7 +12,7 @@
 
 bool isChecking = false;
 
-int valorDeCorte = 200;
+int valorDeCorte = 5;
 
 String status = "stable";
   
@@ -18,22 +21,22 @@ void setup()
   pinMode(r, OUTPUT);
   pinMode(g, OUTPUT);
   pinMode(b, OUTPUT);
-  pinMode(sensorLumen, INPUT);
 
   Serial.begin(9600);
 }//Fim do setup
 
 void loop() 
 {
+  distancia = ultra.read(CM);
   if(!isChecking)//Se a variável isChecking for falsa
   {  
-    if(analogRead(sensorLumen) <= valorDeCorte && status == "stable")
+    if(distancia <= valorDeCorte && status == "stable")
     {
       delay(5000);
       status = "panic";
     }
 
-    else if(analogRead(sensorLumen) <= valorDeCorte && status == "panic")
+    else if(distancia <= valorDeCorte && status == "panic")
     {
       status = "impact";
     }
@@ -43,9 +46,7 @@ void loop()
 
   else  //Se isChecking for verdadeira
   {
-    isChecking = false;
-    //Serial.println(analogRead(sensorLumen));
-    if(status=="stable") 
+    isChecking = false;    if(status=="stable") 
     {
       lighthouseStable();
     }
@@ -73,7 +74,7 @@ void lighthouseStable()
     analogWrite(r, i); 
     analogWrite(g, i); 
     Serial.println(i);
-    Serial.println(analogRead(sensorLumen));
+    Serial.println(distancia);
     Serial.println(status);
     Serial.println(isChecking);
   isChecking = false;
@@ -84,7 +85,7 @@ void lighthouseStable()
     analogWrite(r, i); 
     analogWrite(g, i);
     Serial.println(i);
-    Serial.println(analogRead(sensorLumen));
+    Serial.println(distancia);
     Serial.println(status);
   isChecking = false;
   }//Fim do for
