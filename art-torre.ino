@@ -96,6 +96,17 @@ analogWrite(pinMotorD1, velocidaded);
     analogWrite(pinMotorE2, LOW);
     delay(120);
   }
+      
+    analogWrite(pinMotorD1, LOW); 
+    analogWrite(pinMotorD2, 110);
+    analogWrite(pinMotorE2, velocidadee);
+    analogWrite(pinMotorE1, LOW);
+    delay (80);
+    analogWrite(pinMotorD2, LOW); 
+    analogWrite(pinMotorD1, LOW);
+    analogWrite(pinMotorE1, LOW);
+    analogWrite(pinMotorE2, LOW);
+    delay(80);
     servo.write(260); 
     delay(500);
     
