@@ -1,164 +1,209 @@
 #include <Ultrasonic.h>
-#include <Servo.h> 
-Ultrasonic ultra(13, 12);
 
-int distancia;
+#define TRIG_PIN 13
+#define ECHO_PIN 12
+Ultrasonic ultrasonic(TRIG_PIN, ECHO_PIN);
 
 #define r 6 
 #define g 5
 #define b 3
-//IMPORTANTE:
-//PARA COR DO LED RGB, USAR analogWrite AO INVÉS DE digitalWrite
-
-bool isChecking = false;
 
 int valorDeCorte = 5;
-
 String status = "stable";
-  
+
+// Variáveis para controle de tempo sem delay
+unsigned long previousMillis = 0;
+int brightness = 100;
+bool increasing = true;
+
+// Variáveis para controle do modo impact
+unsigned long impactPreviousMillis = 0;
+int impactPattern = 0;
+int patternStep = 0;
+unsigned long patternInterval = 0;
+
+// Sistema de bloqueio de transição
+unsigned long lastStateChange = 0;
+unsigned long stateChangeLockout = 2000; // 2 segundos sem mudanças após detecção
+
 void setup() 
 {
   pinMode(r, OUTPUT);
   pinMode(g, OUTPUT);
   pinMode(b, OUTPUT);
-
   Serial.begin(9600);
-}//Fim do setup
+}
 
 void loop() 
 {
-  distancia = ultra.read(CM);
-  if(!isChecking)//Se a variável isChecking for falsa
-  {  
+  long distancia = ultrasonic.read();
+  
+  unsigned long currentTime = millis();
+  
+  // Só permite mudança de estado se não estiver em período de bloqueio
+  if(currentTime - lastStateChange > stateChangeLockout) 
+  {
+    // Atualiza status baseado na distância
     if(distancia <= valorDeCorte && status == "stable")
     {
-      delay(5000);
+      Serial.println("Mudando para PANIC");
       status = "panic";
+      lastStateChange = currentTime; // Registra o momento da mudança
     }
-
     else if(distancia <= valorDeCorte && status == "panic")
     {
+      Serial.println("Mudando para IMPACT");
       status = "impact";
+      lastStateChange = currentTime; // Registra o momento da mudança
     }
-      
-    isChecking = true;
-  }//Final do if do check
+  }
 
-  else  //Se isChecking for verdadeira
+  // Executa a função apropriada
+  if(status == "stable") 
   {
-    isChecking = false;    if(status=="stable") 
-    {
-      lighthouseStable();
-    }
+    lighthouseStable();
+  }
+  else if(status == "panic")
+  {
+    lighthousePanic();
+  }
+  else if(status == "impact")
+  {
+    lighthouseImpact();
+  }
 
-    else if(status == "panic")
-    {
-  	  lighthousePanic();
-    }
+  Serial.print("Distancia: ");
+  Serial.print(distancia);
+  Serial.print(" Status: ");
+  Serial.println(status);
+  
+  delay(50); // Pequeno delay para estabilidade do sensor
+}
 
-    else if(status == "impact")
-    {
-      lighthouseImpact();
-    }
-
-  }   //Final do else
-
-}//Fim do loop
 
 void lighthouseStable() 
 {
-  analogWrite(b, 0);
-
-  for(int i=100; i <= 200; i++) //Gradualmente deixa o amarelo mais claro 
-  { 
-    analogWrite(r, i); 
-    analogWrite(g, i); 
-    Serial.println(i);
-    Serial.println(distancia);
-    Serial.println(status);
-    Serial.println(isChecking);
-  isChecking = false;
-  }//Fim do for
-  
-  for(int i=200; i>=100; i--) //Gradualmente deixa o amarelo mais escuro
+  // Pisca amarelo suavemente
+  unsigned long currentMillis = millis();
+  if(currentMillis - previousMillis >= 30) 
   {
-    analogWrite(r, i); 
-    analogWrite(g, i);
-    Serial.println(i);
-    Serial.println(distancia);
-    Serial.println(status);
-  isChecking = false;
-  }//Fim do for
-
-}//Fim da função
+    previousMillis = currentMillis;
+    
+    if(increasing) 
+    {
+      brightness++;
+      if(brightness >= 200) increasing = false;
+    } 
+    else 
+    {
+      brightness--;
+      if(brightness <= 100) increasing = true;
+    }
+    
+    analogWrite(r, brightness);
+    analogWrite(g, brightness);
+    analogWrite(b, 0);
+  }
+}
 
 void lighthousePanic() 
 {
-  analogWrite(g, 0);
-  analogWrite(b, 0);
-
-  for(int i=255; i <=53; i++) //Gradualmente deixa o vermelho mais claro 
-  { 
-    analogWrite(r, i);
-    Serial.println(i); 
-  isChecking = false;
-  }//Fim do for
-    
-  for(int i=53; i>=255; i--) //Gradualmente deixa o vermelho mais escuro
+  // Pisca vermelho mais lento
+  unsigned long currentMillis = millis();
+  if(currentMillis - previousMillis >= 300) 
   {
-    analogWrite(r, i);
-    Serial.println(i);
-  isChecking = false;
-  }//Fim do for
-
-}//Fim da função
+    previousMillis = currentMillis;
+    
+    static bool ledState = false;
+    ledState = !ledState;
+    
+    if(ledState) 
+    {
+      analogWrite(r, 255);
+      analogWrite(g, 0);
+      analogWrite(b, 0);
+    } 
+    else 
+    {
+      analogWrite(r, 50);  // Vermelho mais fraco quando "desligado"
+      analogWrite(g, 0);
+      analogWrite(b, 0);
+    }
+  }
+}
 
 void lighthouseImpact()
 {
-  for(int i = 8; i != 0; i--)
+  // Controle de padrões sem delay
+  unsigned long currentMillis = millis();
+  
+  if(currentMillis - impactPreviousMillis >= patternInterval) 
   {
-    if(random(0, 5) == 1)
-    {
-      for(int i = 4; i != 0; i--)
-      {
-      analogWrite(r, 255);
-      analogWrite(g, 255);
-      analogWrite(b, 255);
-      delay(80);
-      analogWrite(r, 0);
-      analogWrite(g, 0);
-      analogWrite(b, 0);
-      delay(80);
-      }
-    }    
-    if(random(0,5) == 2)
-    {
-      for(int i = 0; i != 4; i++)
-      {
-        analogWrite(r, 255);
-        analogWrite(g, 255);
-        analogWrite(b, 255);
-
-        //LED branco
-        delay(50);//Delay aleatório de 0,1s a 1s
-        analogWrite(r, 0);
-        analogWrite(g, 0);
-        analogWrite(b, 0);
-        //LED desligado
-        delay(50);//Delay aleatório de 0,1s a 1s
-      }
+    impactPreviousMillis = currentMillis;
+    
+    switch(impactPattern) {
+      case 0: // Pisca rápido
+        if(patternStep == 0) {
+          analogWrite(r, 255);
+          analogWrite(g, 255);
+          analogWrite(b, 255);
+          patternInterval = 50;
+          patternStep = 1;
+        } else {
+          analogWrite(r, 0);
+          analogWrite(g, 0);
+          analogWrite(b, 0);
+          patternInterval = 100;
+          patternStep = 0;
+          impactPattern = random(0, 3); // Muda padrão
+        }
+        break;
+        
+      case 1: // Pisca duplo
+        if(patternStep == 0) {
+          analogWrite(r, 255);
+          analogWrite(g, 255);
+          analogWrite(b, 255);
+          patternInterval = 80;
+          patternStep = 1;
+        } else if(patternStep == 1) {
+          analogWrite(r, 0);
+          analogWrite(g, 0);
+          analogWrite(b, 0);
+          patternInterval = 80;
+          patternStep = 2;
+        } else if(patternStep == 2) {
+          analogWrite(r, 255);
+          analogWrite(g, 255);
+          analogWrite(b, 255);
+          patternInterval = 80;
+          patternStep = 3;
+        } else {
+          analogWrite(r, 0);
+          analogWrite(g, 0);
+          analogWrite(b, 0);
+          patternInterval = random(500, 1500);
+          patternStep = 0;
+          impactPattern = random(0, 3);
+        }
+        break;
+        
+      case 2: // Pisca longo
+        if(patternStep == 0) {
+          analogWrite(r, 255);
+          analogWrite(g, 255);
+          analogWrite(b, 255);
+          patternInterval = random(200, 800);
+          patternStep = 1;
+        } else {
+          analogWrite(r, 0);
+          analogWrite(g, 0);
+          analogWrite(b, 0);
+          patternInterval = random(200, 1000);
+          patternStep = 0;
+          impactPattern = random(0, 3);
+        }
+        break;
     }
-    analogWrite(r, 255);
-    analogWrite(g, 255);
-    analogWrite(b, 255);
-
-    //LED branco
-    delay(random(100, 1000));//Delay aleatório de 0,1s a 1s
-    analogWrite(r, 0);
-    analogWrite(g, 0);
-    analogWrite(b, 0);
-    //LED desligado
-    delay(random(100, 1000));//Delay aleatório de 0,1s a 1s
-  }//Fim do for
-
-}//Fim da função
+  }
+}
